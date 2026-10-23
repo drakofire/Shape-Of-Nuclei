@@ -5,7 +5,7 @@ import pymunk.pygame_util
 # draw a picture of something on a piece of paper, and take a picture of it and upload it to program and do things!!!!
 
 """
-It would be funny if we had the marbles going toward the shape at randomized trajectories 
+It would be funny if we had the marbles going toward the shape at randomized points.... 
 
 one marble at a time
 detect 
