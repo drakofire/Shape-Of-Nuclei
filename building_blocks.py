@@ -5,19 +5,19 @@ import numpy as np
 import pymunk.pygame_util
 
 # Global Variables
-width = 600
-height = 600
+pygame.init()
+width = pygame.display.Info().current_w
+height = pygame.display.Info().current_h
 marbles = []
+x=width/2
+y=height/2
 
 def main():
     screen=pygame.display.set_mode((width, height))
     clock=pygame.time.Clock()
 
     space = pymunk.Space()
-    space.gravity = 00,100
-
-    x=width/2
-    y=height/2
+    space.gravity = 00,00
 
     body = pymunk.Body(body_type=pymunk.Body.STATIC)
     body.position = (x,y)
@@ -27,7 +27,7 @@ def main():
 
     running = True
     draw_options = pymunk.pygame_util.DrawOptions(screen)
-    ticks_until_next_marble = 25
+    ticks_until_next_marble = 1
     counter = 0
 
     while running:
@@ -37,7 +37,7 @@ def main():
 
         screen.fill((0, 0, 0))
         
-        if counter <= 1000:
+        if counter <= 10000:
             ticks_until_next_marble -= 1
             if ticks_until_next_marble <= 0:
                 how_many_marbles(space, counter, ticks_until_next_marble)
@@ -73,9 +73,18 @@ def how_many_marbles(space, counter, ticks):
     '''
     body2=pymunk.Body()
     body2.position = getrandompoint(width, height)
-    circle=pymunk.Circle(body2, 9)
+    circle=pymunk.Circle(body2, 2)
     circle.color = get_color(counter, ticks)
     circle.mass = 100
+    circle.elasticity = 0
+    circle.friction = 0.1
+    
+    # Make each marble go towards the center
+    dx = x - body2.position.x
+    dy = y - body2.position.y
+    dist = (dx ** 2 + dy ** 2) ** 0.5
+    body2.velocity= (dx / dist * 100, dy / dist * 100)
+
     space.add(body2, circle)
     marbles.append(circle)
     
@@ -86,7 +95,7 @@ def draw_marbles(screen, marbles):
     '''
     for marble in marbles:
         pos = (int(marble.body.position.x), int(marble.body.position.y))
-        pygame.draw.circle(screen, marble.color, pos, 9)
+        pygame.draw.circle(screen, marble.color, pos, 2)
 
 
 def get_color(counter, ticks):
@@ -99,10 +108,6 @@ def get_color(counter, ticks):
     hue = (basic_hue + oscillation) % 1.0
     r, g, b = colorsys.hsv_to_rgb(hue, 0.8, 0.9)    #colorsys module.. converts Hue, Saturaltion, Variation to Red, Green, Blue
     return int(r * 255), int(g * 255), int(b * 255)
-
-
-#def vector_calculation():
-    
 
 def getrandompoint(width, height):
     '''
