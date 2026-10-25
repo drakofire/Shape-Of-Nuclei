@@ -9,6 +9,7 @@ pygame.init()
 width = pygame.display.Info().current_w
 height = pygame.display.Info().current_h
 marbles = []
+frozen_marbles = []
 x=width/2
 y=height/2
 
@@ -22,12 +23,16 @@ def main():
     body = pymunk.Body(body_type=pymunk.Body.STATIC)
     body.position = (x,y)
     middle_shape = pymunk.Circle(body, 100)
+    middle_shape.collision_type = 1
     space.add(body, middle_shape)
     
 
     running = True
-    draw_options = pymunk.pygame_util.DrawOptions(screen)
-    ticks_until_next_marble = 1
+    #draw_options = pymunk.pygame_util.DrawOptions(screen)
+    space.on_collision(2, 1, begin=on_hit)
+    
+
+    ticks_until_next_marble = 0
     counter = 0
 
     while running:
@@ -41,7 +46,7 @@ def main():
             ticks_until_next_marble -= 1
             if ticks_until_next_marble <= 0:
                 how_many_marbles(space, counter, ticks_until_next_marble)
-                ticks_until_next_marble = 1
+                ticks_until_next_marble = 0
                 counter+=1
 
         #space.debug_draw(draw_options)
@@ -52,6 +57,11 @@ def main():
         '''
 
         space.step(1 / 60)
+
+        for marble in frozen_marbles:
+            marble.body_type = pymunk.Body.STATIC
+        frozen_marbles.clear()
+
         draw_marbles(screen, marbles)
         pygame.display.flip()
         clock.tick(60)
@@ -73,17 +83,19 @@ def how_many_marbles(space, counter, ticks):
     '''
     body2=pymunk.Body()
     body2.position = getrandompoint(width, height)
-    circle=pymunk.Circle(body2, 2)
+    circle=pymunk.Circle(body2, 4)
     circle.color = get_color(counter, ticks)
     circle.mass = 100
+    circle.collision_type = 2
     circle.elasticity = 0
     circle.friction = 0.1
+    #circle.group = 1
     
     # Make each marble go towards the center
     dx = x - body2.position.x
     dy = y - body2.position.y
     dist = (dx ** 2 + dy ** 2) ** 0.5
-    body2.velocity= (dx / dist * 100, dy / dist * 100)
+    body2.velocity= (dx / dist * 250, dy / dist * 250)
 
     space.add(body2, circle)
     marbles.append(circle)
@@ -95,7 +107,15 @@ def draw_marbles(screen, marbles):
     '''
     for marble in marbles:
         pos = (int(marble.body.position.x), int(marble.body.position.y))
-        pygame.draw.circle(screen, marble.color, pos, 2)
+        pygame.draw.circle(screen, marble.color, pos, 4)
+
+def on_hit(collision_marbles, space, data):
+    collision_marbles.shapes[0].body.velocity = (0, 0)
+    collision_marbles.shapes[0].body.angular_velocity = 0
+    collision_marbles.shapes[0].collision_type = 1
+    
+
+    frozen_marbles.append(collision_marbles.shapes[0].body)
 
 
 def get_color(counter, ticks):
